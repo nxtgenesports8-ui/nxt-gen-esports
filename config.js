@@ -3,7 +3,7 @@ window.NXT_CONFIG={
   SUPABASE_KEY:"REPLACE_WITH_YOUR_SUPABASE_PUBLISHABLE_KEY",
   UPI_ID:"nxtgenesports@fam",
   WHATSAPP_1:"919045524457",
-  WHATSAPP_2:"918880409708",
+  WHATSAPP_2:"918954417984",
   GMAIL:"nxtgenesports@gmail.com",
   YOUTUBE:"https://youtube.com/@nxtgenesports?si=F6K5ttB9a8uX4r-2",
   INSTAGRAM:"https://www.instagram.com/nxtgenesports?igsh=MWN5YTV3M3ZpYW9xZQ=="
