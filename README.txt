@@ -1,0 +1,1 @@
+Place the supplied NXT GEN logo and approved scrim posters here when publishing. The UI currently uses CSS artwork so the site works without missing image files.
