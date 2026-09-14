@@ -1,0 +1,6 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wallet - NXT GEN</title><link rel="stylesheet" href="style.css"></head>
+<body><header class="top"><a href="index.html" class="brand">NXT GEN <span>ESPORTS</span></a><a href="auth.html" class="btn small">Account</a></header><main class="container">
+<div class="wallet"><p class="muted">Wallet balance</p><div id="balance" class="balance">₹0</div></div>
+<div class="panel"><h2>Add money</h2><p>Pay via UPI: <b>nxtgenesports@fam</b>. Then submit the amount and UTR for verification.</p>
+<form id="topupForm"><label>Amount (₹)<input id="amount" type="number" min="10" max="10000" required></label><label>UTR / transaction ID<input id="utr" required></label><button class="btn">Request top-up</button><p id="topupMessage"></p></form></div>
+<div class="panel"><h2>Transactions</h2><div id="transactions" class="list"></div></div></main><script src="app.js"></script><script src="wallet.js"></script></body></html>

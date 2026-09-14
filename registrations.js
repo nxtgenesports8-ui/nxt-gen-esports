@@ -1,0 +1,1 @@
+document.querySelector('#registrations').innerHTML='<div class="card"><b>Sign in to view your registrations</b><span>Your confirmed teams will appear here.</span></div>';
