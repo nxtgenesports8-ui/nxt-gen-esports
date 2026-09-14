@@ -12,7 +12,7 @@
   <header class="topbar">
     <button class="menu-btn" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
     <div class="brand">NXT GEN <small>ESPORTS</small></div>
-    <button class="signin" onclick="openSignIn()">↪ <span>Sign In</span></button>
+    <a class="signin" href="admin.html">↪ <span>Owner Sign In</span></a>
   </header>
 
   <aside class="drawer" id="drawer">
@@ -103,7 +103,7 @@
               <option>7–9 PM</option><option>9–11 PM</option><option>11 PM–1 AM</option>
             </select>
           </label>
-          <label>Number of Slots Needed<input id="slots" type="number" min="1" max="18" value="1" required></label>
+          <label>Number of Slots Needed<input id="slots" type="number" min="1" max="4" value="1" required></label>
           <label>Price Category
             <select id="price" required>
               <option value="">Select price</option>
@@ -112,7 +112,7 @@
           </label>
           <button class="primary" type="submit">Register on WhatsApp →</button>
         </form>
-        <p class="tiny">Payment confirmation and final slot approval are handled manually through WhatsApp for now.</p>
+        <p class="tiny">Payment confirmation is handled manually through WhatsApp. Your registration is recorded in NXT GEN ESPORTS. Please complete payment and follow the WhatsApp instructions.</p>
       </div>
     </section>
 
@@ -136,7 +136,7 @@
     <section class="about">
       <p>NXT GEN ESPORTS is driven by a passion for competitive esports and a commitment to BGMI excellence. We aim to empower the esports community by creating opportunities, nurturing emerging talent, inspiring players, and building a strong platform for the next generation of esports stars.</p>
       <div class="socials">
-        <a href="#" aria-label="Instagram">◎</a><a href="#" aria-label="YouTube">▶</a><a href="https://wa.me/919045524457" aria-label="WhatsApp">◉</a>
+        <a href="https://www.instagram.com/nxtgenesports/" aria-label="Instagram">◎</a><a href="https://youtube.com/@nxtgenesports" aria-label="YouTube">▶</a><a href="https://wa.me/919045524457" aria-label="WhatsApp">◉</a>
       </div>
       <div class="footer-links">
         <a href="#terms">Terms</a><a href="#contact">Contact Us</a>
@@ -165,18 +165,16 @@
         <h3 class="pink">We're here to help</h3>
         <p class="muted">Have questions about scrims, slots, registrations or partnerships? Connect directly with our team.</p>
         <div class="contact-card"><b>WhatsApp Support</b><a class="pink" href="https://wa.me/919045524457">+91 9045524457</a></div>
-        <div class="contact-card"><b>Second WhatsApp Support</b><span class="muted">Second number will be added here</span></div>
-        <div class="contact-card"><b>Email Support</b><span class="muted">Gmail will be added here</span></div>
+        <div class="contact-card"><b>Second WhatsApp Support</b><span class="muted">+91 8880409708</span></div>
+        <div class="contact-card"><b>Email Support</b><span class="muted">nxtgenesports@gmail.com</span></div>
       </div>
     </section>
   </main>
 
   <a class="whatsapp" href="https://wa.me/919045524457" aria-label="WhatsApp">◔</a>
 
-  <div class="modal" id="signinModal">
-    <div class="modal-box"><button class="modal-close" onclick="closeSignIn()">×</button><h2>Sign In</h2><p>Owner and partner login will be connected when the backend is added.</p><button class="primary" onclick="closeSignIn()">Close</button></div>
-  </div>
-
-  <script src="script.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script>
 </body>
 </html>
