@@ -73,6 +73,12 @@ async function handleAuthPage(){
 
   if(status)status.textContent="Continue with Google / Gmail to sign in.";
   button.disabled=false;
+  // Attach the click handler after the auth check completes.
+  // Without this, the button looks enabled but does nothing on the live site.
+  if(!button.dataset.bound){
+    button.addEventListener("click", google);
+    button.dataset.bound="1";
+  }
 
   sb.auth.onAuthStateChange((event,session)=>{
     if(session&&(event==="SIGNED_IN"||event==="INITIAL_SESSION")){
