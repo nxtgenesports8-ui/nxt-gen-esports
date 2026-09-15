@@ -1,7 +1,7 @@
 window.NXT_CONFIG={
   SUPABASE_URL:"https://vkakkqsqxlzzmkmjrbnb.supabase.co",
-  SUPABASE_KEY:"REPLACE_WITH_YOUR_SUPABASE_PUBLISHABLE_KEY",
-  UPI_ID:"nxtgenesports@fam",
+  SUPABASE_KEY:"sb_publishable_d4fHdeTtEaIRqRjcC1gaBQ_EJkfKRhI",
+  UPI_ID:"9045524457@navi",
   WHATSAPP_1:"919045524457",
   WHATSAPP_2:"918954417984",
   GMAIL:"nxtgenesports@gmail.com",

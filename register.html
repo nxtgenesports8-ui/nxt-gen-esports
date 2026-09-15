@@ -1,4 +1,99 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Register</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="brand" href="scrims.html"><div class="logo">NG</div><div>NXT GEN<small>ESPORTS</small></div></a><button class="round menu">☰</button></header><main class="page"><div class="panel"><div class="kicker">REGISTRATION</div><h1>Join the Scrim</h1><p id="selected" class="muted"></p><form id="form"><label>Team name</label><input class="field" id="team" required placeholder="Enter team name"><label>WhatsApp / contact number</label><input class="field" id="phone" required inputmode="tel" placeholder="10-digit number"><label>Date</label><input class="field" id="date" type="date" required><label>Timing</label><select class="field" id="timing" required><option value="">Select timing</option><option>1-3 PM</option><option>3-5 PM</option><option>5-7 PM</option><option>7-9 PM</option><option>9-11 PM</option><option>11 PM-1 AM</option></select><label>Slots</label><select class="field" id="slots"><option value="1">1 slot</option><option value="2">2 slots</option><option value="3">3 slots</option><option value="4">4 slots</option></select><button class="btn" type="submit">Register & Deduct Wallet</button></form><p id="msg" class="notice" style="margin-top:12px"></p></div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script><script>
-const q=new URLSearchParams(location.search),fee=q.get("fee")||"40";document.querySelector("#selected").textContent=(q.get("type")||"Scrim")+" • Entry ₹"+fee;document.querySelector("#date").value=new Date().toISOString().slice(0,10);
-document.querySelector("#form").onsubmit=async e=>{e.preventDefault();const u=await guard();if(!u)return;const timingText=document.querySelector("#timing").value;const {data:t,error:te}=await sb.from("scrim_timings").select("id").eq("timing",timingText).single();if(te){document.querySelector("#msg").textContent="Timing could not be loaded.";return}const {data,error}=await sb.rpc("submit_registration_with_wallet",{p_team_name:document.querySelector("#team").value.trim(),p_contact_number:document.querySelector("#phone").value.trim(),p_timing_id:t.id,p_scrim_date:document.querySelector("#date").value,p_number_of_slots:Number(document.querySelector("#slots").value),p_price_category:fee});document.querySelector("#msg").textContent=error?error.message:"Registration confirmed. Your wallet was charged ₹"+fee+".";if(!error)setTimeout(()=>location.href="my-registrations.html",1000)};
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register • NXT GEN ESPORTS</title><link rel="stylesheet" href="style.css">
+</head>
+<body><div class="app">
+<header class="top"><a class="brand" href="index.html"><div class="logo">NG</div><div>NXT GEN<small>ESPORTS</small></div></a><button class="round menu" type="button">☰</button></header>
+<main class="page">
+  <div class="panel">
+    <div class="kicker">REGISTRATION</div>
+    <h1>Book Your Scrim</h1>
+    <p id="selected" class="muted"></p>
+    <p class="notice">Your entry fee is deducted from your NXT GEN wallet after the booking is confirmed.</p>
+    <form id="form">
+      <label for="team">Team name</label>
+      <input class="field" id="team" required maxlength="60" placeholder="Enter team name">
+      <label for="phone">WhatsApp / contact number</label>
+      <input class="field" id="phone" required inputmode="tel" autocomplete="tel" maxlength="10" placeholder="10-digit number">
+      <label for="date">Scrim date</label>
+      <input class="field" id="date" type="date" required>
+      <label for="timing">Timing</label>
+      <select class="field" id="timing" required><option value="">Loading timings…</option></select>
+      <div id="capacity" class="muted" style="margin:8px 0 14px"></div>
+      <button class="btn" id="submit" type="submit">Register & Deduct Wallet</button>
+    </form>
+    <p id="msg" class="notice" style="margin-top:12px"></p>
+  </div>
+</main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script>
+const q=new URLSearchParams(location.search);
+const fee=q.get("fee")||"40";
+const type=q.get("type")||"Daily Grind";
+const selected=document.querySelector("#selected");
+const date=document.querySelector("#date");
+const timing=document.querySelector("#timing");
+const capacity=document.querySelector("#capacity");
+const msg=document.querySelector("#msg");
+const submit=document.querySelector("#submit");
+selected.textContent=type+" • Entry ₹"+fee;
+const pad=n=>String(n).padStart(2,"0");
+const localToday=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());};
+date.value=localToday();date.min=localToday();
+let schedule=[];
+async function loadSchedule(){
+  const d=date.value;
+  timing.innerHTML='<option value="">Loading timings…</option>';
+  capacity.textContent="";
+  const {data,error}=await sb.rpc("get_public_scrim_schedule",{p_scrim_date:d});
+  if(error){timing.innerHTML='<option value="">Unable to load timings</option>';msg.textContent=error.message;return;}
+  schedule=Array.isArray(data)?data:[];
+  timing.innerHTML='<option value="">Select timing</option>';
+  for(const row of schedule){
+    const label=row.timing||row.timing_text||"";
+    if(!label)continue;
+    const remaining=Number(row.remaining ?? row.remaining_teams ?? 0);
+    const sold=Boolean(row.sold_out)||remaining<=0;
+    const paused=Boolean(row.paused);
+    const opt=document.createElement("option");
+    opt.value=String(row.timing_id??row.id);
+    opt.textContent=label+(paused?" • PAUSED":sold?" • SOLD OUT":" • "+remaining+" spots left");
+    opt.disabled=paused||sold;
+    timing.appendChild(opt);
+  }
+  updateCapacity();
+}
+function updateCapacity(){
+  const row=schedule.find(x=>String(x.timing_id??x.id)===timing.value);
+  if(!row){capacity.textContent="";return;}
+  const remaining=Number(row.remaining ?? row.remaining_teams ?? 0);
+  const max=Number(row.max_teams ?? 18);
+  capacity.textContent="Teams: "+(max-remaining)+" / "+max+" booked • "+remaining+" remaining";
+}
+date.addEventListener("change",loadSchedule);timing.addEventListener("change",updateCapacity);
+loadSchedule();
+document.querySelector("#form").onsubmit=async e=>{
+ e.preventDefault();msg.textContent="";
+ const u=await guard();if(!u)return;
+ const team=document.querySelector("#team").value.trim();
+ const phone=document.querySelector("#phone").value.trim();
+ if(!/^[6-9]\d{9}$/.test(phone)){msg.textContent="Enter a valid 10-digit Indian mobile number.";return;}
+ if(!timing.value){msg.textContent="Select a timing.";return;}
+ const row=schedule.find(x=>String(x.timing_id??x.id)===timing.value);
+ if(!row){msg.textContent="Please select a valid timing.";return;}
+ if(row.paused||row.sold_out||Number(row.remaining ?? 0)<=0){msg.textContent="This timing is currently unavailable.";return;}
+ submit.disabled=true;submit.textContent="Confirming…";
+ const {data,error}=await sb.rpc("submit_registration_with_wallet",{
+   p_team_name:team,p_contact_number:phone,p_timing_id:Number(timing.value),p_scrim_date:date.value,
+   p_number_of_slots:1,p_price_category:fee
+ });
+ submit.disabled=false;submit.textContent="Register & Deduct Wallet";
+ if(error){msg.textContent=error.message;return;}
+ msg.textContent="Registration confirmed. Entry ₹"+fee+" deducted from your wallet.";
+ setTimeout(()=>location.href="my-registrations.html",900);
+};
 </script></body></html>

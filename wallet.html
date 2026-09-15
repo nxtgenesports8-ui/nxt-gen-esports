@@ -1,3 +1,64 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wallet</title><link rel="stylesheet" href="style.css"></head><body><div class="app"><header class="top"><a class="brand" href="index.html"><div class="logo">NG</div><div>NXT GEN<small>ESPORTS</small></div></a><button class="round menu">☰</button></header><main class="page"><div class="panel"><div class="kicker">WALLET</div><h1 id="balance">₹0</h1><p class="muted">Available balance</p></div><div class="panel"><h3>Add Money</h3><p>Pay using GPay/UPI to <b>nxtgenesports@fam</b>, then submit the amount. No UTR or screenshot is required.</p><div class="notice">QR scanner/payment verification can be added here when an automatic payment provider is connected.</div><input id="amount" class="field" type="number" min="10" max="10000" placeholder="Amount ₹"><button class="btn" id="request">Request Top-up</button><p id="msg" class="notice" style="margin-top:10px"></p></div><div class="panel"><h3>Recent Transactions</h3><div id="tx">Sign in to view transactions.</div></div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="app.js"></script><script>
-(async()=>{const u=await user();if(!u)return;const {data:w}=await sb.rpc("get_my_wallet");const r=Array.isArray(w)?w[0]:w;if(r)document.querySelector("#balance").textContent=money(r.balance_paise);const {data:tx}=await sb.rpc("get_my_wallet_transactions");document.querySelector("#tx").innerHTML=(tx||[]).slice(0,10).map(x=>`<div class="notice" style="margin:5px 0">${x.description||x.transaction_type} — ${money(x.amount_paise)}</div>`).join("")||"No transactions yet.";})();document.querySelector("#request").onclick=async()=>{const u=await guard();if(!u)return;const a=Number(document.querySelector("#amount").value);if(a<10||a>10000)return document.querySelector("#msg").textContent="Enter ₹10 to ₹10,000.";const {error}=await sb.rpc("request_wallet_topup",{p_amount_paise:a*100});document.querySelector("#msg").textContent=error?error.message:"Top-up request submitted for owner verification.";};
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wallet | NXT GEN ESPORTS</title><link rel="stylesheet" href="style.css"><style>.limit{font-size:13px;color:#9ca3af}.notice{word-break:break-word}.paybox{display:grid;gap:12px}.status{min-height:22px}.secure{font-size:13px;color:#9ca3af}</style></head><body><div class="app"><header class="top"><a class="brand" href="index.html"><div class="logo">NG</div><div>NXT GEN<small>ESPORTS</small></div></a><button class="round menu">☰</button></header><main class="page"><div class="panel"><div class="kicker">WALLET</div><h1 id="balance">₹0</h1><p class="muted">Available balance</p><p class="limit">Maximum wallet balance per person: ₹2,000</p></div><div class="panel"><h3>Add Money</h3><p>Choose an amount and pay securely through Razorpay. Your wallet is credited automatically after Razorpay confirms the payment.</p><div class="paybox"><input id="amount" class="field" type="number" min="10" max="2000" step="1" placeholder="Amount ₹10–₹2,000"><button class="btn" id="pay">Add Money with Razorpay</button><p id="msg" class="notice status"></p><p class="secure">No UTR • No screenshot • Automatic verification</p></div></div><div class="panel"><h3>Recent Transactions</h3><div id="tx">Sign in to view transactions.</div></div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://checkout.razorpay.com/v1/checkout.js"></script><script src="config.js"></script><script src="app.js"></script><script>
+let currentBalance=0;
+async function loadWallet(){
+ const u=await user();
+ if(!u)return;
+ const {data:w}=await sb.rpc('get_my_wallet');
+ const r=Array.isArray(w)?w[0]:w;
+ if(r){currentBalance=Number(r.balance_paise||0);document.querySelector('#balance').textContent=money(currentBalance);}
+ const {data:tx}=await sb.rpc('get_my_wallet_transactions');
+ document.querySelector('#tx').innerHTML=(tx||[]).slice(0,10).map(x=>`<div class="notice" style="margin:5px 0">${x.description||x.transaction_type} — ${money(x.amount_paise)}</div>`).join('')||'No transactions yet.';
+}
+async function waitForCredit(beforeBalance,amountPaise){
+ for(let i=0;i<20;i++){
+   await new Promise(r=>setTimeout(r,1500));
+   const {data:w}=await sb.rpc('get_my_wallet');
+   const r=Array.isArray(w)?w[0]:w;
+   const balance=Number(r?.balance_paise||0);
+   if(balance>=beforeBalance+amountPaise){
+     currentBalance=balance;
+     document.querySelector('#balance').textContent=money(balance);
+     return true;
+   }
+ }
+ return false;
+}
+document.querySelector('#pay').onclick=async()=>{
+ const msg=document.querySelector('#msg');
+ msg.textContent='';
+ const u=await guard();if(!u)return;
+ const amount=Number(document.querySelector('#amount').value);
+ if(!Number.isInteger(amount)||amount<10||amount>2000){msg.textContent='Enter ₹10 to ₹2,000.';return;}
+ const amountPaise=amount*100;
+ if(currentBalance+amountPaise>200000){msg.textContent='Wallet balance cannot exceed ₹2,000.';return;}
+ const {data:sessionData}=await sb.auth.getSession();
+ const token=sessionData?.session?.access_token;
+ if(!token){msg.textContent='Please sign in again.';return;}
+ const endpoint=C.SUPABASE_URL+'/functions/v1/razorpay-wallet/create-order';
+ msg.textContent='Creating secure payment...';
+ const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({amount_paise:amountPaise})});
+ const order=await response.json().catch(()=>({}));
+ if(!response.ok){msg.textContent=order.error||'Unable to create payment order.';return;}
+ const options={
+   key:order.key_id,
+   amount:order.amount_paise,
+   currency:order.currency||'INR',
+   name:'NXT GEN ESPORTS',
+   description:'Wallet Top-up',
+   order_id:order.order_id,
+   prefill:{email:u.email||''},
+   theme:{color:'#111827'},
+   handler:async()=>{
+     msg.textContent='Payment received. Verifying and crediting your wallet...';
+     const credited=await waitForCredit(currentBalance,amountPaise);
+     msg.textContent=credited?'Payment successful. Wallet credited automatically.':'Payment successful. Wallet credit is being confirmed; please refresh in a moment.';
+     await loadWallet();
+   },
+   modal:{ondismiss:()=>{msg.textContent='Payment window closed.';}}
+ };
+ const rzp=new Razorpay(options);
+ rzp.on('payment.failed',function(resp){msg.textContent=resp?.error?.description||'Payment failed. Please try again.';});
+ rzp.open();
+};
+loadWallet();
 </script></body></html>
